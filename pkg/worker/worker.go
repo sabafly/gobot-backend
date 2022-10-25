@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/ikafly144/gobot-backend/pkg/database"
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -15,6 +17,8 @@ type Res struct {
 	Status  string `json:"status"`
 	Content any    `json:"content"`
 }
+
+func init() { godotenv.Load() }
 
 func StartServer() {
 	handleRequests()
@@ -93,7 +97,11 @@ func removeBan(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(&Res{Code: 400, Status: "400 Bad Request", Content: "missing arg"})
 		} else {
-			err := removeDB(&database.GlobalBan{ID: i})
+			_, err := http.Get("http://" + os.Getenv("SERVER") + "/ban/delete?id=" + strconv.Itoa(i))
+			if err != nil {
+				log.Printf("%v", err)
+			}
+			err = removeDB(&database.GlobalBan{ID: i})
 			if err != nil {
 				log.Printf("%v", err)
 			}
