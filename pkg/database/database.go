@@ -23,9 +23,10 @@ type DB struct {
 	Content string
 }
 
-func GetDBConn() (db *gorm.DB, err error) {
-	dsn := "host=192.168.3.42 port=5432 user=gobot_canary password=dev dbname=gobot_canary sslmode=disable TimeZone=Asia/Tokyo"
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default})
+var dsn = "host=192.168.3.42 port=5432 user=gobot_canary password=dev dbname=gobot_canary sslmode=disable TimeZone=Asia/Tokyo"
+var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default})
+
+func GetDBConn() (*gorm.DB, error) {
 	if err != nil {
 		return db, err
 	}
