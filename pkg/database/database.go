@@ -1,8 +1,11 @@
 package database
 
 import (
+	"log"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -23,8 +26,19 @@ type DB struct {
 	Content string
 }
 
-var dsn = "host=192.168.3.42 port=5432 user=gobot_canary password=dev dbname=gobot_canary sslmode=disable TimeZone=Asia/Tokyo"
-var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default})
+var dsn string
+var db *gorm.DB
+var err error
+
+func init() {
+	err = godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+	dsn = "host=" + os.Getenv("DB_HOST") + " port=" + os.Getenv("DB_PORT") + " user=" + os.Getenv("DB_USER") + " password=" + os.Getenv("DB_PASSWORD") + " dbname=" + os.Getenv("DB_NAME") + " sslmode=disable TimeZone=Asia/Tokyo"
+	log.Print(dsn)
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default})
+}
 
 func GetDBConn() (*gorm.DB, error) {
 	if err != nil {
