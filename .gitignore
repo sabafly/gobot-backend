@@ -16,4 +16,5 @@
 
 .env
 .vscode
+*.sh
 gobot-backend
