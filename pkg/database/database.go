@@ -18,6 +18,7 @@ type GlobalBan struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 	Reason    string
 }
+
 type GlobalBans []GlobalBan
 
 type DB struct {
