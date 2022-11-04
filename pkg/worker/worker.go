@@ -25,6 +25,8 @@ type ImagePngHash struct {
 	Data string
 }
 
+type ImagePngHashes []ImagePngHash
+
 func init() { godotenv.Load() }
 
 func StartServer() {
@@ -160,7 +162,7 @@ func imgPngAdd(w http.ResponseWriter, r *http.Request) {
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	hash := r.URL.Query().Get("s")
-	images := []ImagePngHash{}
+	images := ImagePngHashes{}
 	db, err := database.GetDBConn()
 	var str string
 	if err != nil {
@@ -168,6 +170,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(&Res{Code: 500, Status: "500 Server Error", Content: err})
 		return
 	}
+	db.Table("image_png_hash")
 	db.Preload("Orders").Find(images)
 	for _, iph := range images {
 		if iph.Hash == hash {
