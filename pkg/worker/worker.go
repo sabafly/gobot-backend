@@ -20,6 +20,11 @@ type Res struct {
 	Content any    `json:"content"`
 }
 
+type ImagePngHash struct {
+	Hash string
+	Data string
+}
+
 func init() { godotenv.Load() }
 
 func StartServer() {
@@ -31,6 +36,7 @@ func handleRequests() {
 	http.HandleFunc("/api/ban", getBan)
 	http.HandleFunc("/api/ban/create", createBan)
 	http.HandleFunc("/api/ban/remove", removeBan)
+	http.HandleFunc("/api/image/png/add", imgPngAdd)
 	http.HandleFunc("/api/base64/decode", downloadHandler)
 	log.Fatal(http.ListenAndServe(":8123", nil))
 }
@@ -136,8 +142,38 @@ func logRequest(r *http.Request) {
 	log.Printf("%v %v %v", r.Method, r.Host, r.RequestURI)
 }
 
+func imgPngAdd(w http.ResponseWriter, r *http.Request) {
+	body := []byte{}
+	r.Body.Read(body)
+	data := &ImagePngHash{}
+	json.Unmarshal(body, data)
+	db, err := database.GetDBConn()
+	if err != nil {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(&Res{Code: 500, Status: "500 Server Error", Content: err})
+		return
+	}
+	db.Create(data)
+	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: "success"})
+}
+
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
-	str := r.URL.Query().Get("b")
+	hash := r.URL.Query().Get("s")
+	images := []ImagePngHash{}
+	db, err := database.GetDBConn()
+	var str string
+	if err != nil {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(&Res{Code: 500, Status: "500 Server Error", Content: err})
+		return
+	}
+	db.Preload("Orders").Find(images)
+	for _, iph := range images {
+		if iph.Hash == hash {
+			str = iph.Data
+			log.Print(iph)
+		}
+	}
 
 	str = strings.ReplaceAll(str, "data:image/png;base64,", "")
 
