@@ -186,7 +186,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, _ := base64.RawStdEncoding.DecodeString(str)
 
-	w.Header().Set("Content-Disposition", "attachment; filename=tmp.png")
-	w.Header().Set("Content-Type", "application/png")
+	w.Header().Set("Content-Disposition", "attachment; filename="+hash+".png")
+	w.Header().Set("Content-Type", "image/png")
 	w.Write(res)
 }
