@@ -22,8 +22,8 @@ type Res struct {
 
 type ImagePngHash struct {
 	gorm.Model
-	Hash string
-	Data string
+	Hash string `gorm:"primarykey"`
+	Data string `gorm:"primarykey"`
 }
 
 type ImagePngHashes []ImagePngHash
