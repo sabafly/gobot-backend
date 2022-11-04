@@ -21,6 +21,7 @@ type Res struct {
 }
 
 type ImagePngHash struct {
+	gorm.Model
 	Hash string
 	Data string
 }
