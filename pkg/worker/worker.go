@@ -172,10 +172,10 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	db.Table("image_png_hash")
 	db.Preload("Orders").Find(images)
+	log.Print(images)
 	for _, iph := range images {
 		if iph.Hash == hash {
 			str = iph.Data
-			log.Print(iph)
 		}
 	}
 
