@@ -147,7 +147,9 @@ func logRequest(r *http.Request) {
 
 func imgPngAdd(w http.ResponseWriter, r *http.Request) {
 	body := []byte{}
-	r.Body.Read(body)
+	read, _ := r.GetBody()
+	defer read.Close()
+	read.Read(body)
 	data := &ImagePngHash{}
 	json.Unmarshal(body, data)
 	log.Print(data)
