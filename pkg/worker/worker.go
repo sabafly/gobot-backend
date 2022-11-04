@@ -3,6 +3,7 @@ package worker
 import (
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -146,10 +147,7 @@ func logRequest(r *http.Request) {
 }
 
 func imgPngAdd(w http.ResponseWriter, r *http.Request) {
-	body := []byte{}
-	read, _ := r.GetBody()
-	defer read.Close()
-	read.Read(body)
+	body, _ := io.ReadAll(r.Body)
 	data := &ImagePngHash{}
 	json.Unmarshal(body, data)
 	log.Print(data)
