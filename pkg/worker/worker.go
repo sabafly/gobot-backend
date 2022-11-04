@@ -1,11 +1,13 @@
 package worker
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/ikafly144/gobot-backend/pkg/database"
 	"github.com/joho/godotenv"
@@ -29,6 +31,7 @@ func handleRequests() {
 	http.HandleFunc("/api/ban", getBan)
 	http.HandleFunc("/api/ban/create", createBan)
 	http.HandleFunc("/api/ban/remove", removeBan)
+	http.HandleFunc("/api/base64/decode", downloadHandler)
 	log.Fatal(http.ListenAndServe(":8123", nil))
 }
 
@@ -131,4 +134,16 @@ func getBan(w http.ResponseWriter, r *http.Request) {
 
 func logRequest(r *http.Request) {
 	log.Printf("%v %v %v", r.Method, r.Host, r.RequestURI)
+}
+
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	str := r.URL.Query().Get("b")
+
+	str = strings.ReplaceAll(str, "data:image/png;base64,", "")
+
+	res, _ := base64.RawStdEncoding.DecodeString(str)
+
+	w.Header().Set("Content-Disposition", "attachment; filename=tmp.png")
+	w.Header().Set("Content-Type", "application/png")
+	w.Write(res)
 }
