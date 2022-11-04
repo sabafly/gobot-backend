@@ -172,7 +172,6 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(&Res{Code: 500, Status: "500 Server Error", Content: err})
 		return
 	}
-	db.AutoMigrate(images)
 	db.Table("image_png_hash")
 	db.Preload("Orders").Find(images)
 	log.Print(images)
