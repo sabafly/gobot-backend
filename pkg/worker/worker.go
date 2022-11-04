@@ -176,7 +176,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	db.AutoMigrate(&ImagePngHash{})
 	db.Table("image_png_hash")
-	db.Preload("Orders").Find(images)
+	db.Preload("Orders").Find(&images)
 	log.Print(images)
 	for _, iph := range images {
 		if iph.Hash == hash {
