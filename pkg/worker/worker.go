@@ -147,6 +147,7 @@ func imgPngAdd(w http.ResponseWriter, r *http.Request) {
 	r.Body.Read(body)
 	data := &ImagePngHash{}
 	json.Unmarshal(body, data)
+	log.Print(data)
 	db, err := database.GetDBConn()
 	if err != nil {
 		w.WriteHeader(500)
