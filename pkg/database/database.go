@@ -21,6 +21,23 @@ type GlobalBan struct {
 
 type GlobalBans []GlobalBan
 
+type TransMCServer struct {
+	FeedMCServer
+	Address string
+	Port    uint16
+}
+
+type FeedMCServer struct {
+	gorm.Model
+	Hash      string `gorm:"index"`
+	GuildID   string
+	ChannelID string
+	RoleID    string
+	Name      string
+}
+
+type FeedMCServers []FeedMCServer
+
 type DB struct {
 	Id      int
 	Name    string

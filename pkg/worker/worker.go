@@ -3,6 +3,7 @@ package worker
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ikafly144/gobot-backend/pkg/database"
+	"github.com/ikafly144/gobot-backend/pkg/mc"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
@@ -42,6 +44,9 @@ func handleRequests() {
 	http.HandleFunc("/api/ban/remove", removeBan)
 	http.HandleFunc("/api/image/png/add", imgPngAdd)
 	http.HandleFunc("/api/base64/decode", downloadHandler)
+	http.HandleFunc("/api/feed/mc", feedMCServerGet)
+	http.HandleFunc("/api/feed/mc/add", feedMCServerAdd)
+	http.HandleFunc("/api/feed/mc/remove", feedMCServerRemove)
 	log.Fatal(http.ListenAndServe(":8123", nil))
 }
 
@@ -147,6 +152,8 @@ func logRequest(r *http.Request) {
 }
 
 func imgPngAdd(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	w.Header().Set("Content-Type", "application/json")
 	body, _ := io.ReadAll(r.Body)
 	data := &ImagePngHash{}
 	json.Unmarshal(body, data)
@@ -176,7 +183,6 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	db.AutoMigrate(&ImagePngHash{})
 	db.Table("image_png_hash")
 	db.Raw("select distinct on (hash) * from image_png_hashes;").Preload("Orders").Find(&images)
-	log.Print(images)
 	for _, iph := range images {
 		if iph.Hash == hash {
 			str = iph.Data
@@ -190,4 +196,67 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", "attachment; filename="+hash+".png")
 	w.Header().Set("Content-Type", "image/png")
 	w.Write(res)
+}
+
+func feedMCServerAdd(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	w.Header().Set("Content-Type", "application/json")
+	body, _ := io.ReadAll(r.Body)
+	data := &database.TransMCServer{}
+	json.Unmarshal(body, data)
+	db, err := database.GetDBConn()
+	if err != nil {
+		http.Error(w, fmt.Sprint(err), 500)
+	}
+	db.AutoMigrate(&data.FeedMCServer)
+	db.Create(&data.FeedMCServer)
+	server := &mc.MCServer{
+		Hash:    data.Hash,
+		Address: data.Address,
+		Port:    data.Port,
+		Online:  false,
+	}
+	log.Print(server)
+	db.AutoMigrate(&server)
+	db.Create(&server)
+	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: "success"})
+}
+
+func feedMCServerRemove(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	w.Header().Set("Content-Type", "application/json")
+	read, err := r.GetBody()
+	if err != nil {
+		http.Error(w, fmt.Sprint(err), 500)
+	}
+	var body []byte
+	read.Read(body)
+	data := &database.FeedMCServer{}
+	json.Unmarshal(body, data)
+	db, err := database.GetDBConn()
+	if err != nil {
+		http.Error(w, fmt.Sprint(err), 500)
+	}
+	db.AutoMigrate(data)
+	db.Delete(data)
+	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: "success"})
+}
+
+func feedMCServerGet(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	w.Header().Set("Content-Type", "application/json")
+	read, err := r.GetBody()
+	if err != nil {
+		http.Error(w, fmt.Sprint(err), 500)
+	}
+	var body []byte
+	read.Read(body)
+	data := &database.FeedMCServers{}
+	json.Unmarshal(body, data)
+	db, err := database.GetDBConn()
+	if err != nil {
+		http.Error(w, fmt.Sprint(err), 500)
+	}
+	db.Preload("Orders").Find(&data)
+	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: data})
 }
