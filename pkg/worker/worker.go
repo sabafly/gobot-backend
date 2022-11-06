@@ -168,6 +168,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := database.GetDBConn()
 	var str string
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(&Res{Code: 500, Status: "500 Server Error", Content: err})
 		return
