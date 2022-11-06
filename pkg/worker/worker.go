@@ -23,7 +23,7 @@ type Res struct {
 
 type ImagePngHash struct {
 	gorm.Model
-	Hash string `gorm:"primarykey"`
+	Hash string `gorm:"uniqueIndex"`
 	Data string
 }
 
