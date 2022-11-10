@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
