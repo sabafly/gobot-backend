@@ -29,7 +29,7 @@ type TransMCServer struct {
 }
 
 type FeedMCServer struct {
-	ID        int `gorm:"uniqueIndex"`
+	ID        int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Hash      string `gorm:"uniqueIndex"`
