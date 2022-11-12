@@ -47,6 +47,7 @@ func handleRequests() {
 	http.HandleFunc("/api/feed/mc", feedMCServerGet)
 	http.HandleFunc("/api/feed/mc/add", feedMCServerAdd)
 	http.HandleFunc("/api/feed/mc/remove", feedMCServerRemove)
+	http.HandleFunc("/api/feed/mc/hash", addressFromHash)
 	log.Fatal(http.ListenAndServe(":8123", nil))
 }
 
@@ -143,7 +144,7 @@ func getBan(w http.ResponseWriter, r *http.Request) {
 	}
 	bans := database.GlobalBans{}
 	db.Table("global_bans")
-	db.Preload("Orders").Find(&bans)
+	db.Find(&bans)
 	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: bans})
 }
 
@@ -208,6 +209,7 @@ func feedMCServerAdd(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprint(err), 500)
 	}
+	data.FeedMCServer.PanelID = data.FeedMCServer.Name + "_" + data.FeedMCServer.GuildID
 	db.AutoMigrate(&data.FeedMCServer)
 	db.Create(&data.FeedMCServer)
 	server := &mc.MCServer{
@@ -225,38 +227,38 @@ func feedMCServerAdd(w http.ResponseWriter, r *http.Request) {
 func feedMCServerRemove(w http.ResponseWriter, r *http.Request) {
 	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
-	read, err := r.GetBody()
-	if err != nil {
-		http.Error(w, fmt.Sprint(err), 500)
-	}
-	var body []byte
-	read.Read(body)
-	data := &database.FeedMCServer{}
-	json.Unmarshal(body, data)
+	body, _ := io.ReadAll(r.Body)
+	data := database.FeedMCServer{}
+	json.Unmarshal(body, &data)
 	db, err := database.GetDBConn()
 	if err != nil {
 		http.Error(w, fmt.Sprint(err), 500)
 	}
-	db.AutoMigrate(data)
-	db.Delete(data)
+	db.AutoMigrate(&database.FeedMCServer{PanelID: data.Name + "_" + data.GuildID})
+	removeDB(&database.FeedMCServer{PanelID: data.Name + "_" + data.GuildID})
 	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: "success"})
 }
 
 func feedMCServerGet(w http.ResponseWriter, r *http.Request) {
 	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
-	read, err := r.GetBody()
-	if err != nil {
-		http.Error(w, fmt.Sprint(err), 500)
-	}
-	var body []byte
-	read.Read(body)
-	data := &database.FeedMCServers{}
-	json.Unmarshal(body, data)
 	db, err := database.GetDBConn()
 	if err != nil {
 		http.Error(w, fmt.Sprint(err), 500)
 	}
-	db.Preload("Orders").Find(&data)
+	data := database.FeedMCServers{}
+	db.AutoMigrate(&data)
+	db.Find(&data)
+	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: data})
+}
+
+func addressFromHash(w http.ResponseWriter, r *http.Request) {
+	db, err := database.GetDBConn()
+	if err != nil {
+		http.Error(w, fmt.Sprint(err), 500)
+	}
+	data := mc.MCServers{}
+	db.AutoMigrate(&data)
+	db.Find(&data)
 	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: data})
 }

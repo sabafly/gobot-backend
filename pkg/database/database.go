@@ -29,13 +29,16 @@ type TransMCServer struct {
 }
 
 type FeedMCServer struct {
-	gorm.Model
+	ID        int `gorm:"uniqueIndex"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Hash      string `gorm:"uniqueIndex"`
 	GuildID   string
 	ChannelID string
 	RoleID    string
 	Name      string
 	Locale    discordgo.Locale
+	PanelID   string `gorm:"primarykey"`
 }
 
 type FeedMCServers []FeedMCServer
