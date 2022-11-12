@@ -32,7 +32,7 @@ type FeedMCServer struct {
 	ID        int
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Hash      string `gorm:"uniqueIndex"`
+	Hash      string
 	GuildID   string
 	ChannelID string
 	RoleID    string
