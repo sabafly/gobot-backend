@@ -1,9 +1,11 @@
 name: CI
 
+run-name: ${{ github.ref }}
+
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - v[0-9]+.[0-9]+.[0-9]+**
 
 jobs:
   build:
@@ -19,7 +21,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASS }}
           script: |
-            cd ${{ secrets.SERVER_DEPLOY_DIR }}
-            echo ${{ secrets.SSH_PASSWORD }} | git pull origin main
-            echo ${{ secrets.SSH_PASSWORD }} | /usr/local/go/bin/go build
-            echo ${{ secrets.SSH_PASSWORD }} | sudo -S systemctl restart gobot-backend
+            cd ${{ secrets.SERVER_DEPLOY_DIR }} 
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S git stash
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S git pull
+            /usr/local/go/bin/go build
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S killall -SIGINT gobot-backend

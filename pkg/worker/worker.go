@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -38,24 +39,54 @@ func StartServer() {
 }
 
 func handleRequests() {
-	http.HandleFunc("/", notFound)
-	http.HandleFunc("/api/ban", getBan)
-	http.HandleFunc("/api/ban/create", createBan)
-	http.HandleFunc("/api/ban/remove", removeBan)
-	http.HandleFunc("/api/image/png/add", imgPngAdd)
-	http.HandleFunc("/api/base64/decode", downloadHandler)
-	http.HandleFunc("/api/feed/mc", feedMCServerGet)
-	http.HandleFunc("/api/feed/mc/add", feedMCServerAdd)
-	http.HandleFunc("/api/feed/mc/remove", feedMCServerRemove)
-	http.HandleFunc("/api/feed/mc/hash", addressFromHash)
+	http.HandleFunc("/", handler)
 	log.Fatal(http.ListenAndServe(":8123", nil))
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	if m, _ := regexp.MatchString("^/api/base64/mc/image", r.URL.Path); m {
+		downloadHandler(w, r)
+		return
+	}
+	switch r.URL.Path {
+	case "/api/ban":
+		getBan(w, r)
+		return
+	case "/api/ban/create":
+		createBan(w, r)
+		return
+	case "/api/ban/remove":
+		removeBan(w, r)
+		return
+	case "/api/image/png/add":
+		imgPngAdd(w, r)
+		return
+	case "/api/base64/mc/image":
+		downloadHandler(w, r)
+		return
+	case "/api/feed/mc":
+		feedMCServerGet(w, r)
+		return
+	case "/api/feed/mc/add":
+		feedMCServerAdd(w, r)
+		return
+	case "/api/feed/mc/remove":
+		feedMCServerRemove(w, r)
+		return
+	case "/api/feed/mc/hash":
+		addressFromHash(w, r)
+		return
+	default:
+		notFound(w, r)
+		return
+	}
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
 	json.NewEncoder(w).Encode(&Res{Code: 404, Status: "404 Not Found", Content: "null"})
-	logRequest(r)
 }
 
 func createDB(v interface{}) (tx *gorm.DB, err error) {
@@ -81,7 +112,6 @@ func removeDB(v interface{}) (err error) {
 }
 
 func createBan(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
 	log.Printf("%v", r.URL.Query())
 	w.Header().Set("Content-Type", "application/json")
 	if r.URL.Query().Has("id") && r.URL.Query().Has("reason") {
@@ -108,7 +138,6 @@ func createBan(w http.ResponseWriter, r *http.Request) {
 }
 
 func removeBan(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	if r.URL.Query().Has("id") {
 		i, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -134,7 +163,6 @@ func removeBan(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBan(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	db, err := database.GetDBConn()
 	if err != nil {
@@ -153,7 +181,6 @@ func logRequest(r *http.Request) {
 }
 
 func imgPngAdd(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	body, _ := io.ReadAll(r.Body)
 	data := &ImagePngHash{}
@@ -200,7 +227,6 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func feedMCServerAdd(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	body, _ := io.ReadAll(r.Body)
 	data := &database.TransMCServer{}
@@ -225,7 +251,6 @@ func feedMCServerAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func feedMCServerRemove(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	body, _ := io.ReadAll(r.Body)
 	data := database.FeedMCServer{}
@@ -240,7 +265,6 @@ func feedMCServerRemove(w http.ResponseWriter, r *http.Request) {
 }
 
 func feedMCServerGet(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	db, err := database.GetDBConn()
 	if err != nil {
