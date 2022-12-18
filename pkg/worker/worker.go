@@ -62,9 +62,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	case "/api/image/png/add":
 		imgPngAdd(w, r)
 		return
-	case "/api/base64/mc/image":
-		downloadHandler(w, r)
-		return
 	case "/api/feed/mc":
 		feedMCServerGet(w, r)
 		return
@@ -198,7 +195,7 @@ func imgPngAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
-	hash := r.URL.Query().Get("s")
+	hash := strings.ReplaceAll(r.URL.Path, "/api/base64/mc/image/", "")
 	images := ImagePngHashes{}
 	db, err := database.GetDBConn()
 	var str string
