@@ -43,6 +43,16 @@ type FeedMCServer struct {
 
 type FeedMCServers []FeedMCServer
 
+type MessagePin struct {
+	ChannelID string `gorm:"primarykey"`
+	MessageID string
+	UserID    string
+	UserName  string
+	UserIcon  string
+	Content   string
+	Embeds    []byte
+}
+
 type DB struct {
 	Id      int
 	Name    string

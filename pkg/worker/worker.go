@@ -74,6 +74,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	case "/api/feed/mc/hash":
 		addressFromHash(w, r)
 		return
+	case "/api/message/pin":
+		messagePin(w, r)
 	default:
 		notFound(w, r)
 		return
@@ -282,4 +284,45 @@ func addressFromHash(w http.ResponseWriter, r *http.Request) {
 	db.AutoMigrate(&data)
 	db.Find(&data)
 	json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: data})
+}
+
+func messagePin(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		w.Header().Set("Content-Type", "application/json")
+		body, _ := io.ReadAll(r.Body)
+		data := database.MessagePin{}
+		json.Unmarshal(body, &data)
+		db, err := database.GetDBConn()
+		if err != nil {
+			http.Error(w, fmt.Sprint(err), 500)
+		}
+		db.AutoMigrate(data)
+		db.Create(data)
+		json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: data})
+	case http.MethodGet:
+		w.Header().Set("Content-Type", "application/json")
+		db, err := database.GetDBConn()
+		if err != nil {
+			http.Error(w, fmt.Sprint(err), 500)
+		}
+		data := []database.MessagePin{
+			{
+				ChannelID: r.URL.Query().Get("channel"),
+			},
+		}
+		db.AutoMigrate(&data)
+		db.Find(&data)
+		res := database.MessagePin{}
+		for _, mp := range data {
+			if mp.ChannelID == r.URL.Query().Get("channel") {
+				res = mp
+			}
+		}
+		json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: res})
+	case http.MethodDelete:
+		w.Header().Set("Content-Type", "application/json")
+		removeDB(database.MessagePin{ChannelID: r.URL.Query().Get("channel")})
+		json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: nil})
+	}
 }
