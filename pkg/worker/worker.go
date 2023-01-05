@@ -76,6 +76,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	case "/api/message/pin":
 		messagePin(w, r)
+	case "/api/panel/vote":
+		panelVote(w, r)
 	default:
 		notFound(w, r)
 		return
@@ -323,6 +325,47 @@ func messagePin(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		w.Header().Set("Content-Type", "application/json")
 		removeDB(database.MessagePin{ChannelID: r.URL.Query().Get("channel")})
+		json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: nil})
+	}
+}
+
+func panelVote(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		w.Header().Set("Content-Type", "application/json")
+		body, _ := io.ReadAll(r.Body)
+		data := database.VoteObject{}
+		json.Unmarshal(body, &data)
+		db, err := database.GetDBConn()
+		if err != nil {
+			http.Error(w, fmt.Sprint(err), 500)
+		}
+		db.AutoMigrate(data)
+		removeDB(database.VoteObject{VoteID: data.VoteID})
+		db.Create(data)
+		json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: data})
+	case http.MethodGet:
+		w.Header().Set("Content-Type", "application/json")
+		db, err := database.GetDBConn()
+		if err != nil {
+			http.Error(w, fmt.Sprint(err), 500)
+		}
+		data := []database.VoteObject{}
+		db.AutoMigrate(&data)
+		db.Find(&data)
+		for _, mp := range data {
+			if r.URL.Query().Has("id") {
+				if mp.VoteID == r.URL.Query().Get("id") {
+					json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: mp})
+					return
+				}
+			} else {
+				json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: data})
+			}
+		}
+	case http.MethodDelete:
+		w.Header().Set("Content-Type", "application/json")
+		removeDB(database.VoteObject{VoteID: r.URL.Query().Get("id")})
 		json.NewEncoder(w).Encode(&Res{Code: 200, Status: "200 OK", Content: nil})
 	}
 }

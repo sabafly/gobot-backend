@@ -53,6 +53,22 @@ type MessagePin struct {
 	Embeds    []byte
 }
 
+type VoteObject struct {
+	VoteID       string `gorm:"primarykey"`
+	ChannelID    string
+	MessageID    string
+	Title        string
+	Description  string
+	MinSelection int
+	MaxSelection int
+	ShowCount    bool
+	Selections   []byte // array of VoteSelection
+	StartAt      time.Time
+	EndAt        time.Time
+	Duration     time.Duration
+	Locale       discordgo.Locale
+}
+
 type DB struct {
 	Id      int
 	Name    string
