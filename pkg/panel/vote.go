@@ -3,6 +3,7 @@ package panel
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -30,8 +31,14 @@ func getStatus() {
 	}
 	b, err := json.Marshal(res)
 	if err != nil {
+		log.Print(err)
 		return
 	}
 
-	http.NewRequest(http.MethodDelete, "http://"+os.Getenv("SERVER")+"/panel/vote", bytes.NewBuffer(b))
+	r, err := http.NewRequest(http.MethodDelete, "http://"+os.Getenv("SERVER")+"/panel/vote", bytes.NewBuffer(b))
+	if err != nil {
+		log.Print(err)
+	}
+	client := http.Client{}
+	client.Do(r)
 }
